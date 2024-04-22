@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <table id="product-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody id="product-list"></tbody>
+    </table>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8765');
+        const productList = document.getElementById('product-list');
+        let currentProductIndex = 0;
+        let products = [];
+
+        socket.onmessage = function(event) {
+            products = JSON.parse(event.data);
+
+            // Display all products initially for 5 seconds
+            displayAllProducts();
+            setTimeout(startContinuousUpdate, 5000);
+        };
+
+        function displayAllProducts() {
+            productList.innerHTML = '';
+            products.forEach(product => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${product[0]}</td>
+                    <td>${product[1]}</td>
+                    <td>$${product[2]}</td>
+                    <td>${product[3]}</td>
+                `;
+                productList.appendChild(tr);
+            });
+            // Log initial products to the console
+            console.log('Initial products:', products);
+            // Log a message indicating the change after 5 seconds
+            console.log('Displaying all products for 5 seconds...');
+        }
+
+        function startContinuousUpdate() {
+            // Update one product every 3 seconds
+            setInterval(updateProduct, 3000);
+        }
+
+        function updateProduct() {
+            if (currentProductIndex >= products.length) {
+                currentProductIndex = 0; // Reset index if it exceeds the product count
+            }
+            const product = products[currentProductIndex];
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${product[0]}</td>
+                <td>${product[1]}</td>
+                <td>$${product[2]}</td>
+                <td>${product[3]}</td>
+            `;
+            // Clear existing product list and append the new product
+            productList.innerHTML = '';
+            productList.appendChild(tr);
+            currentProductIndex++; // Move to the next product
+            // Log the updated product to the console
+            console.log('Updated product:', product);
+        }
+    </script>
+</body>
+</html>
